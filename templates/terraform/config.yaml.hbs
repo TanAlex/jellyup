@@ -1,0 +1,28 @@
+name: {{name}}
+
+# customer name in one short word, like ong
+customer: example
+
+regions:
+  - us-east-1
+
+account_ids:
+  prod:  012345678900
+  stage: 102345678900
+  shared: 120345678900
+  audit: 123045678900
+  log-archive: 123405678900
+  master: 123450678900
+
+roles:
+  prod: arn:aws:iam::012345678900:role/AWSControlTowerExecution
+  stage: arn:aws:iam::102345678900:role/AWSControlTowerExecution
+  shared: arn:aws:iam::120345678900:role/AWSControlTowerExecution
+  audit: arn:aws:iam::123045678900:role/AWSControlTowerExecution
+  log-archive: arn:aws:iam::123450678900:role/AWSControlTowerExecution
+  master: arn:aws:iam::123450678900:role/onica-sso-OnicaSsoRole-ABCD1234WVXY
+
+modules:
+  - ../terraform/vpc
+  - ../terraform/tgw-hub
+  - ../terraform/tgw-spoke

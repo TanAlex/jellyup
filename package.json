@@ -1,0 +1,25 @@
+{
+  "name": "jellyup",
+  "version": "0.1.1",
+  "description": "tools to generate IaC code from templates",
+  "main": "index.js",
+  "bin": {
+    "jellyup": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "iac",
+    "scaffold",
+    "generator",
+    "template"
+  ],
+  "dependencies": {
+    "js-yaml": "^3.13.1",
+    "node-plop": "^0.19.0",
+    "plop": "^2.5.0"
+  },
+  "author": "ttan",
+  "license": "ISC"
+}

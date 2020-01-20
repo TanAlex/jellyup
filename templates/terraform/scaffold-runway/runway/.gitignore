@@ -1,0 +1,8 @@
+.vscode/
+*.pyc
+terraform/local
+.terraform/
+backend.tf
+*.un~
+*.un
+*.swp
