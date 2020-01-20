@@ -48,13 +48,17 @@ module.exports = function (plop) {
                 }
             }
 
-            let files = ["Makefile", ".gitignore", "Pipfile", "README.md"]
+            let files = ["Makefile", "gitignore", "Pipfile", "README.md"]
             for (let file of files){
+                let file_dest = file;
+                if (file == "gitignore"){
+                    file_dest = `.${file}`;
+                }
                 actions.push({
                     type: 'add',
-                    path: `runway/${file}`,
+                    path: `${file_dest}`,
                     data: data,
-                    templateFile: `templates/terraform/scaffold-runway/runway/${file}`
+                    templateFile: `templates/terraform/scaffold-runway/${file}`
                 });
             }            
 
