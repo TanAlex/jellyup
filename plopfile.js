@@ -8,6 +8,7 @@ module.exports = function(plop) {
   // console.log(`configPath: ${configPath}`);
   fs.readdirSync(configPath).forEach(function(file) {
     file = path.join(configPath, file);
-    require(file)(plop, config);
+    if (! file.startsWith("."))
+      require(file)(plop, config);
   });
 };
