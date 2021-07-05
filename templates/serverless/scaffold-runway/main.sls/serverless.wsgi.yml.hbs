@@ -1,0 +1,44 @@
+# serverless.yml
+
+service: {{name}}-wsgi
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+  # - serverless-offline
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+  wsgi:
+    app: app.app
+    packRequirements: false
+  pythonRequirements:
+    dockerizePip: false
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: dev
+  region: us-west-2
+
+package:
+#   individually: true
+  exclude:
+    - '*.pyc'
+    - node_modules/**
+    - .serverless/**
+    - __pycache__/**
+    - serverless.yaml
+    - requirements.txt
+    - package.json
+    - package-lock.json
+    
+functions:
+  app:
+    handler: wsgi.handler
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'
+    environment:
+      SLACK_SIGNING_SECRET: ${ssm:/abc/abcd/${self:custom.stage}/SLACK_SIGNING_SECRET~true}

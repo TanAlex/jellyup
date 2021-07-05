@@ -1,0 +1,85 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+import boto3
+import json
+import datetime
+import gzip
+import urllib
+import urllib3
+import logging
+from pprint import pprint
+from requests_aws4auth import AWS4Auth
+import requests
+from io import BytesIO
+import base64
+
+"""
+Can Override the global variables using Lambda Environment Parameters
+"""
+globalVars  = {}
+globalVars['Owner']                 = "Onica"
+globalVars['Environment']           = "ONG"
+globalVars['awsRegion']             = "us-east-1"
+globalVars['tagName']               = "serverless-s3-to-es-log-ingester"
+globalVars['service']               = "es"
+globalVars['esIndexPrefix']         = "s3-to-es-"
+globalVars['esIndexDocType']        = "s3_to_es_docs"
+globalVars['esHosts']               = {
+                                        'test': '' ,
+                                        'prod': 'https://vpc-elasticsearch-xozv3zvokkv4wwddfu5vbclj4y.us-east-1.es.amazonaws.com'
+                                        }
+
+# Initialize Logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+
+def lambda_handler(event, context):
+    s3 = boto3.client('s3')
+    credentials = boto3.Session().get_credentials()
+    awsauth = AWS4Auth( credentials.access_key, 
+                        credentials.secret_key, 
+                        globalVars['awsRegion'], 
+                        globalVars['service'], 
+                        session_token=credentials.token
+                    )
+
+    logger.info("Received event: " + json.dumps(event, indent=2))
+    # Index each line to ES Domain
+    indexName = globalVars['esIndexPrefix'] + str( datetime.date.today().year ) + '-' + str( datetime.date.today().month )
+    es_Url = globalVars['esHosts'].get('prod') + '/' + indexName + '/' + globalVars['esIndexDocType']
+    
+    docData = {}
+    docData['createdDate']      = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z')
+    docData['data']          = {}
+
+    # process kinesis firehose events
+    succeeded = 0
+    failed = 0
+    for record in event['Records']:
+        # Kinesis data is base64 encoded so decode here
+        payload=base64.b64decode(record["kinesis"]["data"])
+        # logger.debug("Decoded payload: " + str(payload))
+        try:
+            try:
+                docData['data'] = json.loads(payload)
+            except:
+                docData['data'] = str(payload)
+            headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+            resp = requests.post(es_Url, auth=awsauth, headers=headers, json=docData)
+
+            if resp.status_code == 201:
+                succeeded += 1
+            else:
+                logger.error('FAILURE: Unable to insert element: ' + str(payload))
+                failed += 1
+        except Exception as e:
+            logger.error('ERROR: {0}'.format( str(e) ) )
+            logger.error('ERROR: Unable to insert to es:"{0}"'.format( str( payload ) ) )
+            failed += 1
+    logger.info('The End of Lambda script, succeeded: {}, failed: {}'.format(succeeded, failed))
+    return failed < 1
+
+if __name__ == '__main__':
+    lambda_handler(None, None)

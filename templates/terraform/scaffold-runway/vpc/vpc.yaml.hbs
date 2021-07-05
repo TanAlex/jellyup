@@ -1,0 +1,40 @@
+vpc:
+  environments:
+    prod:
+      vars:
+        az_count: 3
+    stage:
+      vars:
+        az_count: 3
+        root_disk: |
+          {
+            volume_size           = "350"
+            volume_type           = "gp2"
+            delete_on_termination = false
+          }
+    shared:
+      vars:
+        az_count: 3
+    master:
+      vars:
+        enable_protected_subnets: "false"
+        enable_private_subnets:  "true"
+        enable_public_subnets: "true"
+        az_count: 3
+  regions:
+    - us-east-1
+  backend:
+    bucket: "\{{customer}}-shared-tf-\{{region}}"
+    region:  "\{{region}}"
+    dynamodb_table: "\{{customer}}-shared_tfstate_lock"
+  vpc_cidr:
+    prod: "10.1.0.0/18"
+    stage: "10.2.0.0/18"
+    shared: "10.3.0.0/18"
+    master: "10.4.0.0/18"
+  enable_tgw_route:
+    prod: "true"
+    stage: "true"
+    shared: "true"
+    master: "true"
+  tgw_cidr: "10.0.0.0/8"

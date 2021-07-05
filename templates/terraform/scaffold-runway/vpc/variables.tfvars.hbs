@@ -1,0 +1,26 @@
+namespace = "{{customer}}-{{environment}}"
+customer = "{{customer}}"
+environment = "{{environment}}"
+aws_region = "{{region}}"
+account_id = "{{account}}"
+
+
+{{#each account_ids}}
+{{@key}}_account_id = "{{this}}"
+{{/each}}
+
+tags = {
+    "CustomerName" = "{{customer_name}}",
+    "ApplicationName"= "terraform",
+    "EnvironmentName"= "{{environment}}",
+    "CostCenter" = "0",
+    "TechOwner" = "{{customer}}",
+    "TechOwnerEmail" = "{{TechOwnerEmail}}"
+}
+
+#--------------------
+# VPC
+#--------------------
+{{#each vpc.vars}}
+{{@key}} = {{{this}}}
+{{/each}}

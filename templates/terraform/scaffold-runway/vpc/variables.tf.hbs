@@ -1,0 +1,66 @@
+variable "namespace" {
+  description = "Customer Namespace."
+  default     = ""
+}
+
+variable "aws_region" {
+  description = "AWS region."
+  default     = "us-east-1"
+}
+
+variable "environment" {
+  description = "Environment."
+}
+
+variable "tags" {
+  description = "tags to propogate to all supported resources"
+  type        = "map"
+  default = {
+    "Name" = "{{customer}}"
+  }
+}
+
+variable "vpc_cidr" {
+    type    = "map"
+    description = "CIDR associated with the VPC to be created"
+    default = {
+{{#each vpc.vpc_cidr}}
+      "{{@key}}" = "{{this}}"
+{{/each}}
+    }
+}
+
+variable "tgw_cidr" {
+  type    = "string"
+  default = "{{vpc.tgw_cidr}}"
+}
+
+variable "az_count" {
+  description = "the number of AZs to deploy infrastructure to"
+  default     = 3
+}
+
+variable "enable_public_subnets" {
+  type    = "string"
+  default = "true"
+}
+
+variable "enable_private_subnets" {
+  type    = "string"
+  default = "true"
+}
+
+variable "enable_protected_subnets" {
+  type    = "string"
+  default = "true"
+}
+
+variable "enable_tgw_route" {
+    type    = "map"
+    description = "Add Transit Gateway Route"
+    default = {
+{{#each vpc.enable_tgw_route}}
+      "{{@key}}"" = "{{this}}"
+{{/each}}
+    }
+}

@@ -1,6 +1,6 @@
 {
   "name": "jellyup",
-  "version": "0.1.3",
+  "version": "0.3.0",
   "description": "tools to generate IaC code from templates",
   "main": "index.js",
   "bin": {

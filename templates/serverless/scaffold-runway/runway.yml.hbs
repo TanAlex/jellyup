@@ -1,0 +1,29 @@
+---
+# See full syntax at https://github.com/onicagroup/runway
+ignore_git_branch: true
+
+account_ids: &account_ids
+{{#each account_ids}}
+  {{@key}}: {{this}}
+{{/each}}
+
+roles: &roles
+{{#each roles}}
+  {{@key}}: {{this}}
+{{/each}}
+
+deployments:
+# Deploys Terraform Infrastructure
+  - name: serverless
+    modules:
+    {{#each modules}}
+      - {{this}}
+    {{/each}}
+    regions:
+    {{#each regions}}
+      - {{this}}
+    {{/each}}
+    account-id:
+      <<: *account_ids
+    assume-role:
+      <<: *roles

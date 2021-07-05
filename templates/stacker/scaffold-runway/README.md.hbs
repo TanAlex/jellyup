@@ -1,0 +1,21 @@
+# README
+
+AWS infrastructure as code.
+
+## Usage
+
+This directory uses a python virtual environment (`pipenv`). To activate the virtual environment, run `make install` to first prepare the environment by installing all packages then, use `pipenv shell` to enter the virtual environment.
+
+> If using `make` commands, you do not need to enter the virtual environment with `pipenv shell`. This is handled by the command itself.
+
+### Make Commands
+
+`make` is used to simplify actions in this directory. To see a complete list of commands, review [Makefile](./Makefile).
+
+## /runway
+
+This directory contains [runway](https://github.com/onicagroup/runway) deployments. Runway is used to wrap stacker/CloudFormation deployments to simplify deployments across multiple regions/accounts.
+
+## /stacker
+
+This directory contains [stacker](https://github.com/cloudtools/stacker) modules. A module consists of all blueprints, CloudFormation templates, hooks, and lookups required to deploy a solution. It may contain example configuration files and `.env` files.

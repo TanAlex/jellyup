@@ -1,10 +1,13 @@
 const path = require("path");
-var normalizedPath = path.join(__dirname, "configs");
+const config = require("./libs/config");
+var defaultConfigPath = path.join(__dirname, "configs");
 const fs = require("fs");
 
 module.exports = function(plop) {
-  fs.readdirSync(normalizedPath).forEach(function(file) {
-    file = path.join(normalizedPath, file);
-    require(file)(plop);
+  let configPath = config.appSetting.configDir;
+  // console.log(`configPath: ${configPath}`);
+  fs.readdirSync(configPath).forEach(function(file) {
+    file = path.join(configPath, file);
+    require(file)(plop, config);
   });
 };

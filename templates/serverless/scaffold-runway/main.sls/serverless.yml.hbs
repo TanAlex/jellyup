@@ -1,0 +1,92 @@
+service: {{name}}-sls
+
+frameworkVersion: ">=1.58.0"
+plugins:
+  - serverless-python-requirements
+  - serverless-plugin-aws-alerts
+
+# TODO clean up environment variables
+
+# TODO update layout for this
+# This will mean each function will have it's own zip rather than a massive zip for all functions
+# package:
+#   individually: true
+
+
+custom:
+  stage_config: ${file(config-${opt:stage}-${opt:region}.yml)}
+  pythonRequirements:
+    layer: true
+    dockerizePip: 'non-linux'
+    slim: false
+    invalidateCaches: true
+  alerts:
+    stages: ${opt:stage, 'dev'}
+    topics:
+      ok: ${cf:${self:provider.stage}-sns-topics.LowPriorityTopic}
+      alarm: ${cf:${self:provider.stage}-sns-topics.LowPriorityTopic}
+    definitions:
+      functionErrors:
+        metricName: errors
+        namespace: 'AWS/Lambda'
+        statistic: Sum
+        treatMissingData: notBreaching
+        evaluationPeriods: 5
+        comparisonOperator: GreaterThanThreshold
+        period: 60
+        threshold: 1
+      functionDuration:
+        metricName: duration
+        namespace: 'AWS/Lambda'
+        statistic: Average
+        threshold: 850000
+        treatMissingData: notBreaching
+        period: 60
+        evaluationPeriods: 1
+        comparisonOperator: GreaterThanThreshold
+    alarms:
+      - functionErrors
+      - functionDuration
+
+provider:
+  name: aws
+  stage: ${opt:stage, 'dev'}
+  runtime: python3.6
+  memorySize: 1024
+  timeout: 900
+  iamRoleStatements:
+    - Action:
+        - s3:PutObject
+        - s3:GetObject
+        - s3:ListObjects
+        - s3:ListBucket
+        - ssm:GetParametersByPath
+        - ssm:GetParameters
+        - ssm:GetParameter
+      Effect: Allow
+      Resource: "*"
+
+package:
+#   individually: true
+  exclude:
+    - '*.pyc'
+    - node_modules/**
+    - .serverless/**
+    - __pycache__/**
+    - serverless.yaml
+    - requirements.txt
+    - package.json
+    - package-lock.json
+
+functions:
+  main-function:
+    handler: lambda_function.lambda_handler
+    memorySize: 2048
+    # events:
+    #   - schedule:
+    #       rate: cron(0 6 ? * * *)
+    #       enabled: ${self:custom.stage_config.event_schedule}
+    environment:
+      VERSION: 1.0
+    # layers:
+    #   - {Ref: PythonRequirementsLambdaLayer}

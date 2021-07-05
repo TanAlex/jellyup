@@ -1,0 +1,25 @@
+# Project name
+name: {{name}}
+
+# customer short name in one short word, like onica
+customer: onica
+# customer full name like "Onica Inc - A Rackspace Company"
+customer_name: "Onica Inc."
+
+TechOwner: "onica"
+TechOwnerEmail: "tech_support@onica.com"
+
+regions:
+  - us-east-1
+
+account_ids:
+  prod:  012345678900
+  dev: 120345678900
+
+
+roles:
+  prod: arn:aws:iam::012345678900:role/AWSControlTowerExecution
+  dev: arn:aws:iam::102345678900:role/AWSControlTowerExecution
+
+modules:
+  - ./main.sls

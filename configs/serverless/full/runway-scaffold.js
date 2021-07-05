@@ -1,7 +1,6 @@
-const config = require("../libs/config");
 
-module.exports = function (plop) {
-    plop.setGenerator('terraform:init', {
+module.exports = function (plop, config) {
+    plop.setGenerator('serverless:init', {
         description: 'generate config.yaml in current folder',
         prompts: [{
             type: 'input',
@@ -10,16 +9,20 @@ module.exports = function (plop) {
         }],
         actions: [{
             type: 'add',
-            path:  'config.yaml',
-            templateFile: "templates/terraform/config.yaml.hbs"
+            path:  '.jellyup/config.yaml',
+            templateFile: "templates/serverless/config.yaml.hbs"
         }]
     });
 
-    plop.setGenerator('terraform:scaffold-runway', {
+    plop.setGenerator('serverless:scaffold-runway', {
         description: 'create scaffold folders including runway.yml',
         prompts: [],
         actions: function(data) {
-
+            if(!config.configFileLoaded){
+                console.log("ERROR: looks like you haven't run init to generate the config.yaml file");
+                console.log("Please run init and modify the config.yaml first.");
+                return false;
+            }
             var actions = [];
             data = Object.assign({}, data, config.data);
             // console.log(config.data);
@@ -27,9 +30,9 @@ module.exports = function (plop) {
 
             actions.push({
                 type: 'add',
-                path: 'runway/runway.yml',
+                path: 'runway.yml',
                 data: data,
-                templateFile: 'templates/terraform/scaffold-runway/runway/runway.yml.hbs'
+                templateFile: 'templates/serverless/scaffold-runway/runway.yml.hbs'
             });
 
             // Create ${accounts}-${regions}.env in 00-account-setup folder
@@ -41,14 +44,23 @@ module.exports = function (plop) {
                     d.region = region;
                     actions.push({
                         type: 'add',
-                        path: `runway/00-account-setup/${environment}-${region}.env`,
+                        path: `main.sls/config-${environment}-${region}.yml`,
                         data: d,
-                        templateFile: 'templates/terraform/scaffold-runway/runway/00-account-setup/accounts.env.hbs'
+                        templateFile: 'templates/serverless/scaffold-runway/main.sls/config-env.yml.hbs'
                     });
                 }
             }
-
-            let files = ["Makefile", "gitignore", "Pipfile", "README.md"]
+            let files = ["lambda_function.py", "package.json", "requirements.txt", "serverless.yml","serverless.wsgi.yml"]
+            for (let file of files){
+                let file_src = file + ".hbs";
+                actions.push({
+                    type: 'add',
+                    path: `main.sls/${file}`,
+                    data: data,
+                    templateFile: `templates/serverless/scaffold-runway/main.sls/${file_src}`
+                });
+            } 
+            files = ["Makefile", "gitignore", "Pipfile", "README.md"]
             for (let file of files){
                 let file_dest = file;
                 if (file == "gitignore"){
@@ -58,11 +70,12 @@ module.exports = function (plop) {
                     type: 'add',
                     path: `${file_dest}`,
                     data: data,
-                    templateFile: `templates/terraform/scaffold-runway/${file}`
+                    templateFile: `templates/serverless/scaffold-runway/${file}`
                 });
             }            
 
             return actions;
         }
     });
+
 };

@@ -1,0 +1,24 @@
+SHELL = /bin/bash
+
+install: pipenv sync
+test: pipenv run runway test
+
+deploy: {{#each accounts}}deploy-{{this.env}} {{/each}}
+
+{{#each accounts}}
+deploy-{{this.env}}:
+	@pushd ./runway && \
+	DEPLOY_ENVIRONMENT={{this.env}} pipenv run runway deploy && \
+	popd
+
+{{/each}}
+
+plan: {{#each accounts}}plan-{{this.env}} {{/each}}
+
+{{#each accounts}}
+plan-{{this.env}}:
+	@pushd ./runway && \
+	DEPLOY_ENVIRONMENT={{this.env}} pipenv run runway plan && \
+	popd
+
+{{/each}}

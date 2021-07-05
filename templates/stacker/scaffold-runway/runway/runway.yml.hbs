@@ -1,0 +1,33 @@
+---
+# See full syntax at https://github.com/onicagroup/runway
+ignore_git_branch: true
+
+account_ids: &account_ids
+{{#each accounts}}
+  {{this.env}}: {{this.id}}
+{{/each}}
+
+roles: &roles
+{{#each accounts}}
+  {{this.env}}: {{this.role}}
+{{/each}}
+
+deployments:
+  - modules:
+      - 00-account-setup
+    regions:
+      - {{region}}
+    account-id:
+      <<: *account_ids
+    assume-role:
+      <<: *roles
+  {{#each accounts}}
+  - modules:
+      - {{this.env}}
+    regions:
+      - {{../region}}
+    account-id:
+      <<: *account_ids
+    assume-role:
+      <<: *roles
+  {{/each}}

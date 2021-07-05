@@ -9,19 +9,15 @@ test: install
 deploy:  {{#each account_ids}}deploy-{{@key}} {{/each}}
 
 {{#each account_ids}}
-deploy-{{@key}}: clean
-	@pushd ./runway && \
-        DEPLOY_ENVIRONMENT={{@key}} pipenv run runway deploy && \
-        popd
+deploy-{{@key}}:
+        DEPLOY_ENVIRONMENT={{@key}} pipenv run runway deploy
 
 {{/each}}
 
 plan:  clean {{#each account_ids}}plan-{{@key}} {{/each}}
 
 {{#each account_ids}}
-plan-{{@key}}: clean
-	@pushd ./runway && \
-        DEPLOY_ENVIRONMENT={{@key}} pipenv run runway plan && \
-        popd
+plan-{{@key}}:
+        DEPLOY_ENVIRONMENT={{@key}} pipenv run runway plan
         
 {{/each}}

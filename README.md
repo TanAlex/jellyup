@@ -2,14 +2,19 @@
 
 A simple scaffolding IaC code generator tool
 
-Usage:
+## Installation
 ```
 npm install -g jellyup
-
-# run the tool then follow instructions to generate files
-jellyup 
-
-# By default, it saves files to current directory you run the tool.
-# by default, it won't overwrite files that already exists  
-# use jellyup -f to force overwrite existing file
 ```
+
+## Modules
+Currently there is support for the following modules:
+
+* Terraform
+
+* Stacker 
+
+
+## Usage
+
+![Usage](docs/imgs/usage.png)

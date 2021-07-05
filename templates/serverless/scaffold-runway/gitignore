@@ -1,0 +1,12 @@
+.vscode/
+*.pyc
+terraform/local
+.terraform/
+*.un~
+*.un
+*.swp
+__pycache__
+node_modules
+.serverless
+.requirements.zip
+.DS_Store
