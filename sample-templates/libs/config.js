@@ -16,20 +16,7 @@ var config = {
         }
         return false;
     },
-    loadConfig: function(configFileName = ".jellyup/config.yaml"){
-        const destDir = appSetting.destDir == undefined ? "." : appSetting.destDir;
-        const configFile = path.join(destDir, configFileName);
-        try {
-            if (fs.existsSync(configFile)) {
-                let fileContents = fs.readFileSync(configFile, 'utf8');
-                config.data = Object.assign({}, config.data, yaml.load(fileContents));
-                config.configFileLoaded = true;
-            }
-        } catch(err) {
-            console.error(err);
-        }
-    },
-    loadConfigDir: function(configDir = ".jellyup"){
+    loadConfig: function(configDir = ".jellyup"){
         const destDir = appSetting.destDir == undefined ? "." : appSetting.destDir;
         const configDirPath = path.join(destDir, configDir);
         let walk = function(dir) {

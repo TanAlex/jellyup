@@ -1,5 +1,6 @@
 
 module.exports = function (plop, config) {
+    const cfgDir = config.appSetting.cwd;
     plop.setGenerator('terraform:init', {
         description: 'generate config.yaml in current folder',
         prompts: [{
@@ -10,7 +11,7 @@ module.exports = function (plop, config) {
         actions: [{
             type: 'add',
             path:  '.jellyup/config.yaml',
-            templateFile: "templates/terraform/config.yaml.hbs"
+            templateFile: `${cfgDir}/templates/terraform/config.yaml.hbs`
         }]
     });
 
@@ -18,11 +19,13 @@ module.exports = function (plop, config) {
         description: 'create scaffold folders including runway.yml',
         prompts: [],
         actions: function(data) {
-            if(!config.configFileLoaded){
+        
+            if(!config.fileExists()){
                 console.log("ERROR: looks like you haven't run init to generate the config.yaml file");
                 console.log("Please run init and modify the config.yaml first.");
                 return false;
             }
+            config.loadConfig(".jellyup/config.yaml");
             var actions = [];
             data = Object.assign({}, data, config.data);
             // console.log(config.data);
@@ -32,7 +35,7 @@ module.exports = function (plop, config) {
                 type: 'add',
                 path: 'runway/runway.yml',
                 data: data,
-                templateFile: 'templates/terraform/scaffold-runway/runway/runway.yml.hbs'
+                templateFile: `${cfgDir}/templates/terraform/scaffold-runway/runway/runway.yml.hbs`
             });
 
             // Create ${accounts}-${regions}.env in 00-account-setup folder
@@ -46,13 +49,13 @@ module.exports = function (plop, config) {
                         type: 'add',
                         path: `runway/00-account-setup/${environment}-${region}.env`,
                         data: d,
-                        templateFile: 'templates/terraform/scaffold-runway/runway/00-account-setup/accounts.env.hbs'
+                        templateFile: `${cfgDir}/templates/terraform/scaffold-runway/runway/00-account-setup/accounts.env.hbs`
                     });
                     actions.push({
                         type: 'add',
                         path: `runway/${environment}/${environment}-${region}.env`,
                         data: d,
-                        templateFile: 'templates/terraform/scaffold-runway/runway/00-account-setup/accounts.env.hbs'
+                        templateFile: `${cfgDir}/templates/terraform/scaffold-runway/runway/00-account-setup/accounts.env.hbs`
                     });
                 }
             }
@@ -67,7 +70,7 @@ module.exports = function (plop, config) {
                     type: 'add',
                     path: `${file_dest}`,
                     data: data,
-                    templateFile: `templates/terraform/scaffold-runway/${file}`
+                    templateFile: `${cfgDir}/templates/terraform/scaffold-runway/${file}`
                 });
             }            
 

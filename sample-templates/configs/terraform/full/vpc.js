@@ -1,5 +1,6 @@
 
 module.exports = function (plop, config) {
+    const cfgDir = config.appSetting.cwd;
     function debug(){
         if(config.debug){
             console.log(...arguments);
@@ -11,18 +12,19 @@ module.exports = function (plop, config) {
         actions: [{
             type: 'add',
             path:  '.jellyup/vpc.yaml',
-            templateFile: "templates/terraform/scaffold-runway/vpc/vpc.yaml.hbs"
+            templateFile: `${cfgDir}/templates/terraform/scaffold-runway/vpc/vpc.yaml.hbs`
         }]
     });
     plop.setGenerator('terraform:vpc:generate', {
         description: 'generate vpc terraform module code',
         prompts: [],
         actions: function(data) {
-            if(!config.configFileLoaded){
+            if(!config.fileExists(".jellyup/vpc.yaml")){
                 console.log("ERROR: looks like you haven't run init to generate the config.yaml file");
                 console.log("Please run init and modify the config.yaml first.");
                 return false;
             }
+            config.loadConfigDir(".jellyup");
             var actions = [];
             let key = "vpc";
             data = Object.assign({}, data, config.data);
@@ -77,13 +79,13 @@ module.exports = function (plop, config) {
                         type: 'add',
                         path: `terraform/vpc/backend-${environment}-${region}.tfvars`,
                         data: d,
-                        templateFile: 'templates/terraform/scaffold-runway/vpc/backend.tfvars.hbs'
+                        templateFile: `${cfgDir}/templates/terraform/scaffold-runway/vpc/backend.tfvars.hbs`
                     });
                     actions.push({
                         type: 'add',
                         path: `terraform/vpc/${environment}-${region}.tfvars`,
                         data: d,
-                        templateFile: 'templates/terraform/scaffold-runway/vpc/variables.tfvars.hbs'
+                        templateFile: `${cfgDir}/templates/terraform/scaffold-runway/vpc/variables.tfvars.hbs`
                     });
 
                 }
@@ -91,8 +93,8 @@ module.exports = function (plop, config) {
             actions.push({
                 type: 'addMany',
                 destination: `terraform/vpc`,
-                base: `templates/terraform/scaffold-runway/vpc`,
-                templateFiles: ["**/*.tf.hbs", "!**/*.tfvars.*"],
+                base: `${cfgDir}/templates/terraform/scaffold-runway/vpc`,
+                templateFiles: [ `${cfgDir}/templates/terraform/scaffold-runway/vpc/**/*.tf.hbs` ],
                 data: data,
             });
             return actions;

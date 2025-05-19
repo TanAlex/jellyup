@@ -1,0 +1,197 @@
+terraform {
+  backend "s3" {
+    key = "vpc"
+  }
+}
+
+data "terraform_remote_state" "tgw-hub" {
+  backend = "s3"
+  config = {
+    bucket     = "onica-shared-tf-us-east-1"
+    key        = "env:/shared/tgw-hub"
+    region     = "us-east-1"
+  }
+}
+
+data "aws_availability_zones" "available_az" {}
+
+locals {
+  vpc_name = "${var.namespace}-vpc-${var.aws_region}"
+}
+
+# Create the VPC
+resource "aws_vpc" "vpc" {
+  cidr_block           = "${var.vpc_cidr[var.environment]}"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = "${merge(var.tags, map("Name",local.vpc_name))}"
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+# Create an internet gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = "${aws_vpc.vpc.id}"
+  tags = "${merge(var.tags, map("Name","${local.vpc_name}-igw"))}"
+}
+
+# Create the three public subnets
+resource "aws_subnet" "public_subnets" {
+  count             = "${var.az_count * (var.enable_public_subnets == "true" ? 1 : 0)}"
+  vpc_id            = "${aws_vpc.vpc.id}"
+  cidr_block        = "${cidrsubnet(var.vpc_cidr[var.environment], 4, count.index + 0)}"
+  availability_zone = "${data.aws_availability_zones.available_az.names[count.index]}"
+
+  tags = "${merge(var.tags, map("Name","${local.vpc_name}-public-${count.index + 1}"))}"
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+# Create the three private subnets
+resource "aws_subnet" "private_subnets" {
+  count             = "${var.az_count * (var.enable_private_subnets == "true" ? 1 : 0)}"
+  vpc_id            = "${aws_vpc.vpc.id}"
+  cidr_block        = "${cidrsubnet(var.vpc_cidr[var.environment], 4, count.index + 3)}"
+  availability_zone = "${data.aws_availability_zones.available_az.names[count.index]}"
+
+  tags = "${merge(var.tags, map("Name","${local.vpc_name}-private-${count.index + 1}"))}"
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+# Create the three protected subnets
+resource "aws_subnet" "protected_subnets" {
+  count             = "${var.az_count * (var.enable_protected_subnets == "true" ? 1 : 0)}"
+  vpc_id            = "${aws_vpc.vpc.id}"
+  cidr_block        = "${cidrsubnet(var.vpc_cidr[var.environment], 4, count.index + 6)}"
+  availability_zone = "${data.aws_availability_zones.available_az.names[count.index]}"
+
+  tags = "${merge(var.tags, map("Name","${local.vpc_name}-protected-${count.index + 1}"))}"
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+
+# Create the route table, igw and associate it with the public subnets
+resource "aws_route_table" "public_route" {
+  vpc_id = "${aws_vpc.vpc.id}"
+  count  = "${var.az_count * (var.enable_public_subnets == "true" ? 1 : 0)}"
+  tags   = "${merge(var.tags, map("Name","${local.vpc_name}-public-rt-${count.index + 1}"))}"
+}
+
+resource "aws_route" "public_igw" {
+  count                  = "${var.az_count * (var.enable_public_subnets == "true" ? 1 : 0)}"
+  route_table_id         = "${element(aws_route_table.public_route.*.id,count.index)}"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = "${aws_internet_gateway.igw.id}"
+}
+
+resource "aws_route_table_association" "public_route_assoc" {
+  count          = "${var.az_count * (var.enable_public_subnets == "true" ? 1 : 0)}"
+  subnet_id      = "${element(aws_subnet.public_subnets.*.id,count.index)}"
+  route_table_id = "${element(aws_route_table.public_route.*.id,count.index)}"
+}
+
+# create the route tables and associate it with the private subnets
+resource "aws_route_table" "private_route" {
+  count  = "${var.az_count * (var.enable_private_subnets == "true" ? 1 : 0)}"
+  vpc_id = "${aws_vpc.vpc.id}"
+  tags   = "${merge(var.tags, map("Name","${local.vpc_name}-private-rt-${count.index + 1}"))}"
+}
+
+resource "aws_route_table_association" "private_route_assoc" {
+  count          = "${var.az_count * (var.enable_private_subnets == "true" ? 1 : 0)}"
+  subnet_id      = "${element(aws_subnet.private_subnets.*.id,count.index)}"
+  route_table_id = "${element(aws_route_table.private_route.*.id,count.index)}"
+}
+
+# create the route tables and associate it with the protected subnets
+resource "aws_route_table" "protected_route" {
+  count  = "${var.az_count * (var.enable_protected_subnets == "true" ? 1 : 0)}"
+  vpc_id = "${aws_vpc.vpc.id}"
+  tags   = "${merge(var.tags, map("Name","${local.vpc_name}-protected-rt-${count.index + 1}"))}"
+}
+
+resource "aws_route_table_association" "protected_route_assoc" {
+  count          = "${var.az_count * (var.enable_protected_subnets == "true" ? 1 : 0)}"
+  subnet_id      = "${element(aws_subnet.protected_subnets.*.id,count.index)}"
+  route_table_id = "${element(aws_route_table.protected_route.*.id,count.index)}"
+}
+
+# Create the NAT Gateway
+resource "aws_eip" "eip" {
+  count = "${var.az_count * (var.enable_public_subnets == "true" ? 1 : 0)}"
+  vpc   = true
+  tags      = "${merge(var.tags, map("Name",local.vpc_name))}"
+}
+
+resource "aws_nat_gateway" "ngw" {
+  count         = "${var.az_count * (var.enable_public_subnets == "true" ? 1 : 0)}"
+  subnet_id     = "${element(aws_subnet.public_subnets.*.id,count.index)}"
+  allocation_id = "${element(aws_eip.eip.*.id,count.index)}"
+  tags          = "${merge(var.tags, map("Name",local.vpc_name))}"
+}
+
+resource "aws_route" "private_nat_gateway" {
+  count                  = "${var.az_count * (var.enable_public_subnets == "true" ? 1 : 0)}"
+  route_table_id         = "${element(aws_route_table.private_route.*.id,count.index)}"
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = "${element(aws_nat_gateway.ngw.*.id,count.index)}"
+}
+
+# Add Transit Gateway Routes
+resource "aws_route" "public_tgw_route" {
+  count                  = "${var.az_count * (var.enable_tgw_route[var.environment] == "true" ? 1 : 0)}"
+  route_table_id         = "${element(aws_route_table.public_route.*.id,count.index)}"
+  destination_cidr_block = "${var.tgw_cidr}"
+  transit_gateway_id         = "${data.terraform_remote_state.tgw-hub.outputs.tgw_id}"
+}
+
+resource "aws_route" "private_tgw_route" {
+  count                  = "${var.az_count * (var.enable_tgw_route[var.environment] == "true" ? 1 : 0)}"
+  route_table_id         = "${element(aws_route_table.private_route.*.id,count.index)}"
+  destination_cidr_block = "${var.tgw_cidr}"
+  transit_gateway_id         = "${data.terraform_remote_state.tgw-hub.outputs.tgw_id}"
+}
+
+# Define the NACL for Protected
+resource "aws_network_acl" "nacl-protected" {
+  count  = "${var.az_count * (var.enable_protected_subnets == "true" ? 1 : 0)}"
+  vpc_id     = "${aws_vpc.vpc.id}"
+  subnet_ids = ["${element(aws_subnet.protected_subnets.*.id,count.index)}"]
+}
+
+# accept inbound SSH requests
+resource "aws_network_acl_rule" "protected_ssh_in" {
+  count  = "${var.az_count * (var.enable_protected_subnets == "true" ? 1 : 0)}"
+  network_acl_id = "${aws_network_acl.nacl-protected[count.index].id}"
+  rule_number    = 100
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "${var.vpc_cidr[var.environment]}"
+  from_port      = 22
+  to_port        = 22
+}
+
+# outbound response for resources over ephemeral ports
+resource "aws_network_acl_rule" "protected_ephemeral_out" {
+  count  = "${var.az_count * (var.enable_protected_subnets == "true" ? 1 : 0)}"
+  network_acl_id = "${aws_network_acl.nacl-protected[count.index].id}"
+  rule_number    = 200
+  egress         = true
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "${var.vpc_cidr[var.environment]}"
+  from_port      = 1024
+  to_port        = 65535
+}

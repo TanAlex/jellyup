@@ -1,8 +1,9 @@
 {
   "name": "jellyup",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "tools to generate IaC code from templates",
   "main": "index.js",
+  "type": "commonjs",
   "bin": {
     "jellyup": "./index.js"
   },
@@ -16,9 +17,18 @@
     "template"
   ],
   "dependencies": {
-    "js-yaml": "^3.13.1",
-    "node-plop": "^0.19.0",
-    "plop": "^2.5.0"
+    "del": "^8.0.0",
+    "inquirer": "^8.2.5",
+    "js-yaml": "^4.1.0",
+    "lodash": "^4.17.21",
+    "node-plop": "^0.32.0",
+    "plop": "^4.0.1"
+  },
+  "overrides": {
+    "glob": "^9.3.5",
+    "rimraf": "^5.0.1",
+    "inflight": "^2.0.0",
+    "del": "^8.0.0"
   },
   "author": "ttan",
   "license": "ISC"

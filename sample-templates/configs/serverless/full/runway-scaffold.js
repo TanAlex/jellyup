@@ -1,5 +1,6 @@
 
 module.exports = function (plop, config) {
+    const cfgDir = config.appSetting.cwd;
     plop.setGenerator('serverless:init', {
         description: 'generate config.yaml in current folder',
         prompts: [{
@@ -10,7 +11,7 @@ module.exports = function (plop, config) {
         actions: [{
             type: 'add',
             path:  '.jellyup/config.yaml',
-            templateFile: "templates/serverless/config.yaml.hbs"
+            templateFile: `${cfgDir}/templates/serverless/config.yaml.hbs`
         }]
     });
 
@@ -32,7 +33,7 @@ module.exports = function (plop, config) {
                 type: 'add',
                 path: 'runway.yml',
                 data: data,
-                templateFile: 'templates/serverless/scaffold-runway/runway.yml.hbs'
+                templateFile: `${cfgDir}/templates/serverless/scaffold-runway/runway.yml.hbs`
             });
 
             // Create ${accounts}-${regions}.env in 00-account-setup folder
@@ -46,7 +47,7 @@ module.exports = function (plop, config) {
                         type: 'add',
                         path: `main.sls/config-${environment}-${region}.yml`,
                         data: d,
-                        templateFile: 'templates/serverless/scaffold-runway/main.sls/config-env.yml.hbs'
+                        templateFile: `${cfgDir}/templates/serverless/scaffold-runway/main.sls/config-env.yml.hbs`
                     });
                 }
             }
@@ -57,7 +58,7 @@ module.exports = function (plop, config) {
                     type: 'add',
                     path: `main.sls/${file}`,
                     data: data,
-                    templateFile: `templates/serverless/scaffold-runway/main.sls/${file_src}`
+                    templateFile: `${cfgDir}/templates/serverless/scaffold-runway/main.sls/${file_src}`
                 });
             } 
             files = ["Makefile", "gitignore", "Pipfile", "README.md"]
@@ -70,7 +71,7 @@ module.exports = function (plop, config) {
                     type: 'add',
                     path: `${file_dest}`,
                     data: data,
-                    templateFile: `templates/serverless/scaffold-runway/${file}`
+                    templateFile: `${cfgDir}/templates/serverless/scaffold-runway/${file}`
                 });
             }            
 
