@@ -11,7 +11,7 @@ npm install -g jellyup
 
 This tool uses a popular nodejs based scaffolding tool called [plop](https://github.com/plopjs/plop)
 
-It's like the other popular code generation tools like create-react-apps and create-backstage-app etc which also use plop library.  
+It's similar to the other popular code generation tools like create-react-apps and create-backstage-app etc which also use plop library.  
 The advantages of plop over tools like cookiecutter in Python is plop gives full programing capabilities to write your own logic to generate files.
 
 The template can be [hbs (handle-bars)](https://github.com/handlebars-lang/handlebars.js) based or plain files.  
@@ -27,7 +27,7 @@ then they can choose a "terraform:vpc" generator to generate files to create a V
 examples are like `add` which is to generate one file from one template  
 or `addMany` which is to generate multiple files from groups of files.   
 There are many types of actions and you can even create your own `actions`.  
-Refere to [plop actions reference](https://plopjs.com/documentation/#the-actions) for details.
+Refere to [plop actions reference](https://plopjs.com/documentation/#built-in-actions) for details.
 
 
 
