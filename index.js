@@ -145,6 +145,7 @@ async function main() {
   }
 
   process.argv = process.argv.slice(0, 2);
+  let destDir = argv.dest;
   if (argv.dest === undefined) {
     const answer = await inquirer.prompt([
       {
@@ -160,15 +161,17 @@ async function main() {
         }
       }
     ]);
-    const destDir = path.resolve(answer.destDir);
-    // Append to process.argv
-    debug("set output dest to: " + destDir);
-    process.argv.push("--dest");
-    process.argv.push(destDir);
-    config.appSetting.destDir = destDir;
+    destDir = path.resolve(answer.destDir);
+
   }else{
-    config.appSetting.destDir = path.resolve(argv.dest);
+    destDir = path.resolve(argv.dest);
   }
+    // Append to process.argv
+  debug("set output dest to: " + destDir);
+  process.argv.push("--dest");
+  process.argv.push(destDir);
+  config.appSetting.destDir = destDir;
+
   if (argv.force != undefined || argv.f != undefined) {
     process.argv.push("-f");
   }
