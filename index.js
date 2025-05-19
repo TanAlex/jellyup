@@ -12,7 +12,7 @@ config.appSetting.currentPath = currentPath;
 config.appSetting.configDir = defaultConfigPath;
 
 
-const { debug } = require("./libs/utils");
+const { debug, manage_cwd } = require("./libs/utils");
 
 const chalk = require('chalk');
 const c_orage = chalk.bold.keyword('orange');
@@ -41,10 +41,18 @@ const usage = function(){
       {cyan jellyup} {green --cwd ./my-jellyup-module-folder --dest ./my-output-folder }
       > This will generate the output files to ./my-output-folder, 
         by default the output folder is .
-    {cyan.bold Kitchen-sink usage:}
+    {cyan.bold Usage Examples:}
       {cyan jellyup} -m terraform:full \
           --cwd my-folder-contains-configs-and-templates \
           --dest ./my-output-folder \
+          -v -f
+      {cyan jellyup} -m terraform:full \
+          --cwd "git@github-tan:TanAlex/jellyup/sample-templates?ref=v0.5.1" \
+          --dest /tmp/test \
+          -v -f
+      {cyan jellyup} -m serverless:full \
+          --cwd "https://github.com/TanAlex/jellyup/sample-templates?ref=master" \
+          --dest /tmp/test \
           -v -f
 `);
 }
@@ -59,18 +67,6 @@ console.log(chalk`{cyan It's very easy to create your own templates, configs fil
 const args = process.argv.slice(2);
 
 const argv = require("minimist")(args);
-
-
-// let configFileName = path.join(currentPath,".jellyup", "config.yaml");
-
-// if (argv.c != undefined){
-//   configFileName = path.join(path.resolve(argv.c), ".jellyup","config.yaml");
-// }
-
-// if (config.fileExists(configFileName)) {
-//   config.loadConfig(configFileName);
-//   // console.debug(config);
-// }
 
 var spawn = require("child_process").spawn;
 
@@ -111,19 +107,34 @@ async function main() {
       {
         type: "input",
         name: "configDir",
-        message: "Please input the path which contains the configs and templates: ",
+        message: "Pls provide the path which contains the configs and templates\n " +
+                 "you can use local path or github url like these \n" +
+                 "  - ./my-path/my-sub-path \n" +
+                 "  - https://github.com/my-org/my-repo/my-path/my-sub-path?ref=v1.0.0 \n" + 
+                 "  - git@github.com:my-org/my-repo/my-path/my-subpath?ref=0.0.8 \n" +
+                 "Please input the path: ",
         default: cwd,
-        validate: function(input) {
-          if (fs.existsSync(input)) {
-            return true;
-          }
-          return 'Directory does not exist. Please enter a valid path.';
-        }
+        // validate: function(input) {
+        //   if (fs.existsSync(input)) {
+        //     return true;
+        //   }
+        //   return 'Directory does not exist. Please enter a valid path.';
+        // }
       }
     ]);
     cwd = answer.configDir;
   }
-  cwd = path.resolve(cwd);
+  
+  // Process the cwd input using the new manage_cwd function
+  const processedCwd = manage_cwd(cwd);
+  
+  // If processedCwd is undefined, it means there was an error in processing
+  if (processedCwd === undefined) {
+    console.log(chalk`{red [ERROR]} Failed to process the provided path`);
+    process.exit(1);
+  }
+  
+  cwd = processedCwd;
   config.appSetting.cwd = cwd;
 
   configDir = path.join(cwd, "configs");

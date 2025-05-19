@@ -115,4 +115,18 @@ The code in [sample-templates/config/serverless/full/runway-scaffold.js](sample-
 
 You can create your own configs and templates and follow the same pattern (generate config file, update, then generate final code) to scaffold and generate any code repos.
 
+## Release new version
+- Update the package.json to bump up the version number
+- Commit and git push changes
+- tag it with the new version and push the tag
+```
+git tag -a v0.5.1 -m "Version 0.5.1"
+git push origin v0.5.1
+```
+- npm login and publish
+```
+npm login
+npm publish
+```
+
 Happy coding 
