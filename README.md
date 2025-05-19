@@ -44,6 +44,26 @@ If you don't provide, it will ask too.
 * `-f or --force`: By default if the detination files already exist, it will skip  
 using `-f` flag will force it to overwrite existing files
 
+You can also use git repo url for the `cwd` like these:  
+The tool will 'git clone' the repo to a '/tmp/<random string>' directory and use it for the configs and templates  
+This enabled us to create our own repos for our templates and just use the tool to run against our solution templates.  
+The tool supports git versions, just use `?ref=xxx` as the examples show below.
+```
+    Usage Examples:
+      jellyup -m terraform:full \
+          --cwd my-folder-contains-configs-and-templates \
+          --dest ./my-output-folder \
+          -v -f
+      jellyup -m terraform:full \
+          --cwd "git@github-tan:TanAlex/jellyup/sample-templates?ref=v0.5.1" \
+          --dest /tmp/test \
+          -v -f
+      jellyup -m serverless:full \
+          --cwd "https://github.com/TanAlex/jellyup/sample-templates?ref=master" \
+          --dest /tmp/test \
+          -v -f
+```
+
 ## How are the template files organized
 
 The sample-templates show some templates and configs samples  
