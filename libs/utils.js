@@ -84,7 +84,8 @@ function manage_cwd(cwd) {
                 }
             }
         }
-        
+        debug(`repo_path: ${repo_path}`);
+        debug(`template_path: ${template_path}`);
         // 3. Clone the repository to a temporary directory
         // Create a random string for the temp directory
         const randomString = crypto.randomBytes(6).toString('hex');
@@ -130,6 +131,8 @@ function manage_cwd(cwd) {
     }
     
     // If it's not a git repository URL, check if the path exists
+    // set to absolute path
+    cwd = path.resolve(cwd);
     if (!fs.existsSync(cwd)) {
         console.error(`template path does not exist: ${cwd}`);
         return undefined;

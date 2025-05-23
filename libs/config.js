@@ -6,7 +6,10 @@ var appSetting = {};
 var config = {
     fileExists: function(configFileName = ".jellyup/config.yaml"){
         const destDir = appSetting.destDir == undefined ? "." : appSetting.destDir;
-        const configFile = path.join(destDir, configFileName);
+        let configFile = configFileName;
+        if (!configFileName.startsWith("/")) {
+           configFile = path.join(destDir, configFileName);
+        }
         try {
             if (fs.existsSync(configFile)) {
                 return true;
@@ -16,13 +19,26 @@ var config = {
         }
         return false;
     },
+    loadConfigContent: function(fileContent){
+        try {
+            config.data = Object.assign({}, yaml.load(fileContent));
+            config.configFileContent = fileContent;
+            config.configFileLoaded = true;
+        } catch(err) {
+            console.error(err);
+        }
+    },
     loadConfig: function(configFileName = ".jellyup/config.yaml"){
         const destDir = appSetting.destDir == undefined ? "." : appSetting.destDir;
-        const configFile = path.join(destDir, configFileName);
+        let configFile = configFileName;
+        if (!configFileName.startsWith("/")) {
+           configFile = path.join(destDir, configFileName);
+        }
         try {
             if (fs.existsSync(configFile)) {
                 let fileContents = fs.readFileSync(configFile, 'utf8');
                 config.data = Object.assign({}, config.data, yaml.load(fileContents));
+                config.configFileContent = fileContents;
                 config.configFileLoaded = true;
             }
         } catch(err) {
@@ -31,7 +47,10 @@ var config = {
     },
     loadConfigDir: function(configDir = ".jellyup"){
         const destDir = appSetting.destDir == undefined ? "." : appSetting.destDir;
-        const configDirPath = path.join(destDir, configDir);
+        let configFile = configFileName;
+        if (!configFileName.startsWith("/")) {
+           configFile = path.join(destDir, configFileName);
+        }
         let walk = function(dir) {
             var results = [];
             var list = fs.readdirSync(dir);
